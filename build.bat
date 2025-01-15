@@ -1,0 +1,1 @@
+python -m PyInstaller --recursive-copy-metadata nidaqmx .\src\tap\main.pyw

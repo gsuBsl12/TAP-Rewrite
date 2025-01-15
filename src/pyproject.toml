@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "TAP"
+version = "0.0.1"
+authors = [
+  { name="Noah Trexler", email="trexlernoah@gmail.com" },
+]
+description = "Taylor Aggression Paradigm GUI for use with NI DAQ mx"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pygame",
+    "ptext",
+    "tksheet",
+    "nidaqmx",
+    "pandas",
+    "numpy",
+]
+
+[project.urls]
+Homepage = "https://github.com/trexlernoah/TAP-Rewrite"

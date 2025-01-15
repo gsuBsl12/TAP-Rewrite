@@ -1,0 +1,6 @@
+pygame
+ptext
+tksheet
+nidaqmx
+pandas
+numpy

@@ -1,0 +1,2 @@
+set PATH=%PATH%;C:\Program Files\Git\usr\bin\
+python -m PyInstaller --recursive-copy-metadata nidaqmx .\tap\main.pyw

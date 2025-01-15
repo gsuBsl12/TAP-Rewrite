@@ -1,0 +1,16 @@
+Metadata-Version: 2.2
+Name: TAP
+Version: 0.0.1
+Summary: Taylor Aggression Paradigm GUI for use with NI DAQ mx
+Author-email: Noah Trexler <trexlernoah@gmail.com>
+Project-URL: Homepage, https://github.com/trexlernoah/TAP-Rewrite
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: pygame
+Requires-Dist: ptext
+Requires-Dist: tksheet
+Requires-Dist: nidaqmx
+Requires-Dist: pandas
+Requires-Dist: numpy
