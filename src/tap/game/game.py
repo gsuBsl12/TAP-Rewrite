@@ -45,9 +45,6 @@ def play(thread_handler: ThreadHandler, settings: Settings, trials: List[Trial])
         wl = trial.wl == "Win"
         main_data.current_data_row.wl = "W" if wl else "L"
 
-        # Diagnostic
-        print(trial)
-
         if wl:
             trial_data = shock_mngr.win_loop()
             if trial_data is None:

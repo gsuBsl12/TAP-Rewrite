@@ -91,8 +91,6 @@ class Data:
         filename = f"{wd}/{subject_id}.dat"
 
         data = self.get_data_frame()
-        print(self.data_rows)
-        print(data)
 
         for col in data:
             data[col] = data[col].str[0:].apply("{:15}".format)

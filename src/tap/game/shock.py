@@ -74,6 +74,7 @@ class ShockMeter:
 
         self.drawer.render_text("", delay=int(duration * 1000))
         self.drawer.reset_meter(key)
+        self.drawer.render_text("", delay=4000)
         return True
 
     def win_loop(self):

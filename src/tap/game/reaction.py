@@ -65,7 +65,7 @@ class ReactionTest:
                         self.data.add_error(ErrorMessage.RELEASE_TOO_SOON)
                         return False
                     else:
-                        self.drawer.render_text("", constants.FG, 1000)
+                        self.drawer.render_text("", constants.FG, 2000)
                         reaction_time = current_time - timer_release
                         self.data.current_data_row.reaction_time = str(reaction_time)
                         return True
