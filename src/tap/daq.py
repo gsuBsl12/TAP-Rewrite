@@ -33,13 +33,42 @@ class DAQ(threading.Thread):
     def current_to_volts(self, mA: float) -> float:
         volts = mA / 2
         # Failsafe for out-of-bounds values
-        if volts > 5.0 or volts < 0.0:
+        if volts > 2.5 or volts < 0.0:
             return 0.0
         return volts
 
     def run(self):
         while not self.thread_handler.kill_event.is_set():
             self.watch_queue()
+
+    def test_watch_queue(self):
+        while (
+            not self.thread_handler.halt_event.is_set()
+            and not self.thread_handler.kill_event.is_set()
+        ):
+            try:
+                shock_task: ShockTask = self.thread_handler.task_queue.get(timeout=0.1)
+            except queue.Empty:
+                pass
+            else:
+                volts = self.current_to_volts(shock_task.shock)
+                print(f"Sending shock of {volts}V")
+
+                try:
+                    start = time.time()
+                    self.thread_handler.halt_event.wait(shock_task.duration)
+                    print(f"Shocked for {time.time() - start}s")
+
+                    start = time.time()
+                    self.thread_handler.halt_event.wait(shock_task.cooldown)
+                    print(f"Cooled down for {time.time() - start}s")
+                except Exception as e:
+                    print("EXCEPTION %s" % e)
+                    self.thread_handler.halt_event.set()
+
+                self.thread_handler.task_queue.task_done()
+        self.thread_handler.task_queue.clear()
+        self.thread_handler.halt_event.clear()
 
     @line_profiler.profile
     def watch_queue(self):
