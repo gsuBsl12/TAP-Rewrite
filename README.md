@@ -43,6 +43,19 @@ Find the tap.exe in the dist/ folder.
 
 To run the software, ensure that the DAQ card is plugged in to the computer via USB. Then, ensure that the DAQ card is electrically connected to the Coulbourn Shocker. See `/diagrams/wire-diagram.png` as a reference.
 
+### IMPORTANT
+
+Never send more than 5V to the shockbox.
+
+You can verify that your computer can interface with the DAQ card by running the driver
+test software. See `/diagrams/NI-manual-shock-tutorial.mp4` as a reference for how to send electrical signals to the DAQ card manually. To summarize the reference video:
+
+1. Open NI Device Monitor. (If you cannot locate the program, try unplugging and re-plugging the USB connection.)
+2. Click 'Test this device'
+3. Under Digital I/O, 1. Select Port `port0`, 2. Set `port0/line0:0` to output, and 3. Select the switch to turn on & off the remote operation, and click `Start` to send the signal to the DAQ.
+4. Under Analog I/O, 1. Set channel to Dev1/ao0, mode Voltage DC, 2. Set Max Output Limit (V) to `2.5` and Min Output Limit (V) to `0`, and 3. Adjust the output value and click `Update` to send the signal to the DAQ.
+5. A shock should be generated while Digital I/O is set to `HIGH` and Analog I/O is updated to a positive voltage.
+
 ## Usage
 
 Ensure that the DAQ card is accessible to the computer running the GUI. You can verify this using NI software that is installed along with the NI-DAQmx driver.

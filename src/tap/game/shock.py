@@ -35,6 +35,8 @@ class ShockMeter:
         high = self.settings.higher_threshold
         low = self.settings.lower_threshold
         intensity = self.settings.intensities[shock - 1]
+        # Calibration: [0.15, 0.135, 0.12, 0.105, 0.09, 0.075, 0.06, 0.045, 0.03, 0.0]
+        calibration = [x / 1000 for x in range(150, 15, -15)] + [0.0]
 
         if intensity < 0:
             intensity = 0
@@ -43,7 +45,7 @@ class ShockMeter:
 
         m = (high - low) / 10
 
-        shock_mA = ((m * shock) + low) * (intensity / 100)
+        shock_mA = (((m * shock) + low) * (intensity / 100)) + calibration[shock - 1]
 
         return shock_mA
 
