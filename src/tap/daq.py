@@ -5,13 +5,20 @@ import queue
 
 import line_profiler
 
-from tap.classes import ThreadHandler, ShockTask
+from tap.classes import ThreadHandler, ShockTask, Logger
 
 
 class DAQ(threading.Thread):
-    def __init__(self, thread_handler: ThreadHandler, device_name="Dev1", pin="ao0"):
+    def __init__(
+        self,
+        thread_handler: ThreadHandler,
+        logger: Logger,
+        device_name="Dev1",
+        pin="ao0",
+    ):
         super(DAQ, self).__init__(target=self.run)
         self.thread_handler = thread_handler
+        self.logger = logger
 
         self.device_name = device_name
         self.pin = pin
@@ -19,22 +26,14 @@ class DAQ(threading.Thread):
 
         self.start()
 
-    def shock(self, value: float, duration: int):
-        # Failsafe for out-of-bounds values
-        if value > 0.75:
-            value = 0.75
-        if value < 0.0:
-            value = 0.0
-        self.task.start()
-        self.task.write(value)
-        time.sleep(duration)
-        self.task.stop()
-
     def current_to_volts(self, mA: float) -> float:
+        self.logger.log(f"Called DAQ.current_to_volts(mA={mA})")
         volts = mA / 2
         # Failsafe for out-of-bounds values
         if volts > 2.5 or volts < 0.0:
+            self.logger.log("Returning DAQ.current_to_volts 0.0")
             return 0.0
+        self.logger.log(f"Returning DAQ.current_to_volts {volts}")
         return volts
 
     def run(self):
@@ -70,6 +69,27 @@ class DAQ(threading.Thread):
         self.thread_handler.task_queue.clear()
         self.thread_handler.halt_event.clear()
 
+    def write_zeroes(self):
+        self.logger.log("Writing zeroes to DAQ")
+        try:
+            self.logger.log("Writing DO OFF")
+            with nidaqmx.Task() as task:
+                task.do_channels.add_do_chan("Dev1/port0/line0:0")
+                task.start()
+                task.write(False)
+                task.stop()
+
+            self.logger.log("Writing AO 0.0")
+            with nidaqmx.Task() as task:
+                task.ao_channels.add_ao_voltage_chan(
+                    "Dev1/ao0", min_val=0.0, max_val=2.5
+                )
+                task.start()
+                task.write(0.0)
+                task.stop()
+        except Exception as e:
+            self.logger.log("EXCEPTION %s" % e)
+
     @line_profiler.profile
     def watch_queue(self):
         while (
@@ -83,9 +103,13 @@ class DAQ(threading.Thread):
             except queue.Empty:
                 pass
             else:
+                self.logger.log("TASK RECEIVED =========== QUEUE READ")
+                self.logger.log(f"Current task: {str(shock_task)}")
+                self.logger.log_queue(self.thread_handler.task_queue)
                 volts = self.current_to_volts(shock_task.shock)
 
                 try:
+                    self.logger.log(f"Writing AO {volts}")
                     with nidaqmx.Task() as task:
                         task.ao_channels.add_ao_voltage_chan(
                             "Dev1/ao0", min_val=0.0, max_val=2.5
@@ -94,34 +118,33 @@ class DAQ(threading.Thread):
                         task.write(volts)
                         task.stop()
 
+                    self.logger.log("Writing DO ON")
                     with nidaqmx.Task() as task:
                         task.do_channels.add_do_chan("Dev1/port0/line0:0")
                         task.start()
                         task.write(True)
                         task.stop()
 
+                    self.logger.log(f"Waiting {shock_task.duration}")
+                    start = time.time()
                     self.thread_handler.halt_event.wait(shock_task.duration)
+                    self.logger.log(f"Shocked for {time.time() - start}s")
 
-                    with nidaqmx.Task() as task:
-                        task.do_channels.add_do_chan("Dev1/port0/line0:0")
-                        task.start()
-                        task.write(False)
-                        task.stop()
+                    self.write_zeroes()
 
-                    with nidaqmx.Task() as task:
-                        task.ao_channels.add_ao_voltage_chan(
-                            "Dev1/ao0", min_val=0.0, max_val=2.5
-                        )
-                        task.start()
-                        task.write(0.0)
-                        task.stop()
-
+                    self.logger.log(f"Waiting {shock_task.duration}")
+                    start = time.time()
                     self.thread_handler.halt_event.wait(shock_task.cooldown)
+                    self.logger.log(f"Cooled down for {time.time() - start}s")
                 except Exception as e:
-                    print("EXCEPTION %s" % e)
+                    self.logger.log("EXCEPTION %s" % e)
+                    self.logger.log("Setting halt event")
                     self.thread_handler.halt_event.set()
 
+                self.logger.log("Setting task done")
                 self.thread_handler.task_queue.task_done()
         # Clean up here
+        self.write_zeroes()
+        self.logger.log("Clearing queue and halt event status")
         self.thread_handler.task_queue.clear()
         self.thread_handler.halt_event.clear()

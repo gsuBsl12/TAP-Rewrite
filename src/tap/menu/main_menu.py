@@ -15,16 +15,17 @@ from tap.game import game
 from tap.menu.profile_parameters import ProfileParameters
 from tap.menu.utils import reform_data, reform_intensities
 from tap.menu.subject_threshold import SubjectThreshold
-from tap.classes import Settings, ThreadHandler
+from tap.classes import Settings, ThreadHandler, Logger
 
 
 class MainMenu(threading.Thread):
     @line_profiler.profile
-    def __init__(self, thread_handler: ThreadHandler) -> None:
+    def __init__(self, thread_handler: ThreadHandler, logger: Logger) -> None:
         super(MainMenu, self).__init__(target=self.run)
         self.start()
 
         self.thread_handler = thread_handler
+        self.logger = logger
 
         self.settings = Settings()
 
@@ -80,9 +81,6 @@ class MainMenu(threading.Thread):
 
         self.run_official(self.settings.trials)
 
-    def documentation(self):
-        return
-
     def show_about_info(self):
         self.show_message(
             """This is a rewrite of the TAP software in Python using the NI DAQ USB-6001 Module.
@@ -92,7 +90,6 @@ To exit the program, press CTRL-C.
 Maximum shock intensity is 2.475 mA.
             """
         )
-        print(self.settings)
 
     def set_subject_threshold(self):
         if not self.settings.trials:

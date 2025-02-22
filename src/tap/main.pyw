@@ -3,22 +3,29 @@ from threading import Event
 
 from tap.menu.main_menu import MainMenu
 from tap.daq import DAQ
-from tap.classes import Queue, ThreadHandler
+from tap.classes import Queue, ThreadHandler, Logger
 
 thread_handler = ThreadHandler(Queue(), Event(), Event())
 
+logger = Logger(True)
+
 
 def main():
-    tk_thread = MainMenu(thread_handler)
+    logger.log("Creating menu thread")
+    tk_thread = MainMenu(thread_handler, logger)
 
-    daq_thread = DAQ(thread_handler)
+    logger.log("Creating DAQ thread")
+    daq_thread = DAQ(thread_handler, logger)
+
     daq_thread.join()
+    logger.log("Joined DAQ thread")
 
     tk_thread.join()
+    logger.log("Joined menu thread")
 
 
 def exit():
-    print("Setting kill event")
+    logger.log("Setting kill event")
     thread_handler.kill_event.set()
 
 

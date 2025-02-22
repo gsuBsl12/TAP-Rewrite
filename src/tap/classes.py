@@ -1,6 +1,7 @@
 import os
 import typing
 import queue
+import datetime
 
 import pandas as pd
 import numpy as np
@@ -141,3 +142,40 @@ class ThreadHandler(typing.NamedTuple):
     task_queue: Queue
     halt_event: Event
     kill_event: Event
+
+
+class Logger:
+    def __init__(self, debug_on: bool):
+        self.debug_on = debug_on
+
+        if not self.debug_on:
+            return
+
+        self.wd = os.getcwd()
+        timestamp = datetime.datetime.now()
+        self.filename = self.wd + "/" + timestamp.strftime("%Y-%m-%d-%H-%M-%S") + ".log"
+
+        try:
+            open(self.filename, "x")
+        except FileExistsError:
+            print("Unable to create logger file")
+
+    def log(self, text):
+        if not self.debug_on:
+            return
+        with open(self.filename, "a") as f:
+            timestamp = datetime.datetime.now()
+            f.write(f"[{timestamp.strftime('%H:%M:%S.%f')}]: ")
+            f.write(text)
+            f.write("\n\n")
+
+    def log_queue(self, queue: Queue):
+        if not self.debug_on:
+            return
+        with open(self.filename, "a") as f:
+            timestamp = datetime.datetime.now()
+            f.write(f"[{timestamp.strftime('%H:%M:%S.%f')}]: QUEUE state\n")
+            for shock_task in list(queue.queue):
+                f.write(str(shock_task))
+                f.write("\n")
+            f.write("\n\n")
