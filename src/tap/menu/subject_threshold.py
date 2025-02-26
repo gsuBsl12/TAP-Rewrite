@@ -136,6 +136,7 @@ class SubjectThreshold(tk.Toplevel):
             self.window.after(500, update)
 
         def stop():
+            self.thread_handler.task_queue.lock()
             self.thread_handler.halt_event.set()
             subwindow.destroy()
 
@@ -162,9 +163,9 @@ class SubjectThreshold(tk.Toplevel):
 
         shock_vals = [x / 1000 for x in range(int(min * 1000), int(max * 1000), 75)]
 
+        self.thread_handler.task_queue.unlock()
         for s in shock_vals:
-            self.thread_handler.task_queue.put(ShockTask(s, 1, 3.5))
-
+            self.thread_handler.task_queue.put_task(ShockTask(s, 1, 3.5))
         update()
 
     def write_data(self):

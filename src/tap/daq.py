@@ -50,22 +50,39 @@ class DAQ(threading.Thread):
             except queue.Empty:
                 pass
             else:
-                volts = self.current_to_volts(shock_task.shock)
-                print(f"Sending shock of {volts}V")
+                if self.thread_handler.task_queue.single_lock:
+                    self.logger.log("Queue is locked")
+                    self.thread_handler.task_queue.clear()
 
+                self.logger.log("TASK RECEIVED =========== QUEUE READ")
+                self.logger.log(f"Current task: {str(shock_task)}")
+                self.logger.log_queue(self.thread_handler.task_queue)
+                volts = self.current_to_volts(shock_task.shock)
+                self.logger.log(f"Writing AO {volts}")
+                self.logger.log("Writing DO ON")
                 try:
+                    self.logger.log(f"Waiting {shock_task.duration}")
                     start = time.time()
                     self.thread_handler.halt_event.wait(shock_task.duration)
-                    print(f"Shocked for {time.time() - start}s")
+                    self.logger.log(f"Shocked for {time.time() - start}s")
 
+                    self.logger.log("Writing DO OFF")
+                    self.logger.log("Writing AO 0.0")
+
+                    self.logger.log(f"Waiting {shock_task.cooldown}")
                     start = time.time()
                     self.thread_handler.halt_event.wait(shock_task.cooldown)
-                    print(f"Cooled down for {time.time() - start}s")
+                    self.logger.log(f"Cooled down for {time.time() - start}s")
                 except Exception as e:
-                    print("EXCEPTION %s" % e)
+                    self.logger.log("EXCEPTION %s" % e)
+                    self.logger.log("Setting halt event")
                     self.thread_handler.halt_event.set()
 
+                self.logger.log("Setting task done")
                 self.thread_handler.task_queue.task_done()
+        self.logger.log("Writing DO OFF")
+        self.logger.log("Writing AO 0.0")
+        self.logger.log("Clearing queue and halt event status")
         self.thread_handler.task_queue.clear()
         self.thread_handler.halt_event.clear()
 
@@ -103,6 +120,11 @@ class DAQ(threading.Thread):
             except queue.Empty:
                 pass
             else:
+                # This may be unnecessary
+                if self.thread_handler.task_queue.single_lock:
+                    self.logger.log("Queue is locked")
+                    self.thread_handler.task_queue.clear()
+
                 self.logger.log("TASK RECEIVED =========== QUEUE READ")
                 self.logger.log(f"Current task: {str(shock_task)}")
                 self.logger.log_queue(self.thread_handler.task_queue)
@@ -132,7 +154,7 @@ class DAQ(threading.Thread):
 
                     self.write_zeroes()
 
-                    self.logger.log(f"Waiting {shock_task.duration}")
+                    self.logger.log(f"Waiting {shock_task.cooldown}")
                     start = time.time()
                     self.thread_handler.halt_event.wait(shock_task.cooldown)
                     self.logger.log(f"Cooled down for {time.time() - start}s")

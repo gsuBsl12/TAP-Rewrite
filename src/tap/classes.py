@@ -126,6 +126,32 @@ class Settings:
 
 # https://stackoverflow.com/questions/6517953/clear-all-items-from-the-queue
 class Queue(queue.Queue):
+    def __init__(self):
+        # If single lock is enabled, only allow one task
+        self.single_lock = True
+        super(Queue, self).__init__(maxsize=1)
+
+    def lock(self):
+        if self.single_lock and self.maxsize == 1:
+            return
+        self.clear()
+        self.single_lock = True
+        self.maxsize = 1
+
+    def unlock(self):
+        if not self.single_lock and self.maxsize == 0:
+            return
+        self.clear()
+        self.single_lock = False
+        self.maxsize = 0
+
+    def put_task(self, item):
+        try:
+            super(Queue, self).put_nowait(item)
+            return True
+        except queue.Full:
+            return False
+
     def clear(self):
         with self.mutex:
             unfinished = self.unfinished_tasks - len(self.queue)

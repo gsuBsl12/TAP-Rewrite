@@ -2,18 +2,20 @@ import pygame
 import random
 
 from tap.game.drawer import Drawer
-from tap.classes import ErrorMessage, Data, Settings, ThreadHandler, ShockTask
+from tap.classes import ErrorMessage, Data, Settings, ThreadHandler, ShockTask, Logger
 
 
 class ShockMeter:
     def __init__(
         self,
         thread_handler: ThreadHandler,
+        logger: Logger,
         settings: Settings,
         drawer: Drawer,
         data: Data,
     ):
         self.thread_handler = thread_handler
+        self.logger = logger
         self.settings = settings
         self.drawer = drawer
         self.data = data
@@ -28,6 +30,8 @@ class ShockMeter:
             duration = 10.0
         if duration < 0.0:
             duration = 0.0
+
+        self.logger.log(f"Returning ShockMeter.get_shock_duration {duration} ")
 
         return duration
 
@@ -47,6 +51,8 @@ class ShockMeter:
 
         shock_mA = (((m * shock) + low) * (intensity / 100)) + calibration[shock - 1]
 
+        self.logger.log(f"Returning ShockMeter.get_shock_value({shock}) {shock_mA} ")
+
         return shock_mA
 
     def generate_shock(self, shock: int, duration: float):
@@ -55,7 +61,13 @@ class ShockMeter:
 
         shock_mA = self.get_shock_value(shock)
 
-        self.thread_handler.task_queue.put(ShockTask(shock_mA, duration, 1))
+        self.logger.log(
+            f"Putting ShockTask in task_queue. ShockMeter.generate_shock({shock}, {duration})"
+        )
+
+        put = self.thread_handler.task_queue.put_task(ShockTask(shock_mA, duration, 1))
+        if not put:
+            self.logger.log("Failed to put ShockTask in task_queue. Queue locked/full.")
 
     def lose_loop(self, shock: int, feedback: int):
         self.drawer.render_text("YOU LOST! YOU GET A SHOCK", delay=2400)
@@ -71,6 +83,8 @@ class ShockMeter:
         self.drawer.draw_meter(key)
 
         duration = self.get_shock_duration()
+
+        self.logger.log(f"Calling ShockMeter.generate_shock({shock}, {duration})")
 
         self.generate_shock(shock, duration)
 

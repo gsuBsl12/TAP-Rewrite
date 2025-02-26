@@ -5,7 +5,7 @@ from tap.game.reaction import ReactionTest
 from tap.game.shock import ShockMeter
 from tap.game.drawer import Drawer
 
-from tap.classes import Trial, Data, Settings, ThreadHandler
+from tap.classes import Trial, Data, Settings, ThreadHandler, Logger
 
 
 def init():
@@ -27,7 +27,12 @@ def init():
     return (display, subsurf)
 
 
-def play(thread_handler: ThreadHandler, settings: Settings, trials: List[Trial]):
+def play(
+    thread_handler: ThreadHandler,
+    logger: Logger,
+    settings: Settings,
+    trials: List[Trial],
+):
     if len(trials) <= 0:
         return
     display, subsurf = init()
@@ -35,7 +40,7 @@ def play(thread_handler: ThreadHandler, settings: Settings, trials: List[Trial])
 
     drawer = Drawer(display, subsurf)
     react_mngr = ReactionTest(drawer, main_data, settings)
-    shock_mngr = ShockMeter(thread_handler, settings, drawer, main_data)
+    shock_mngr = ShockMeter(thread_handler, logger, settings, drawer, main_data)
 
     for i, trial in enumerate(trials):
         reaction_data = react_mngr.run(i == 0)

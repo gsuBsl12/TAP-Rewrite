@@ -64,7 +64,7 @@ class MainMenu(threading.Thread):
         instruction_text.insert("1.0", instruction)
 
     def run_official(self, trials):
-        data = game.play(self.thread_handler, self.settings, trials)
+        data = game.play(self.thread_handler, self.logger, self.settings, trials)
         df = data.get_data_frame()
         # throw error here
         if df.empty:
