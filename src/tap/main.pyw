@@ -5,8 +5,9 @@ from tap.menu.main_menu import MainMenu
 from tap.daq import DAQ
 from tap.classes import Queue, ThreadHandler, Logger
 
-thread_handler = ThreadHandler(Queue(), Event(), Event())
 logger = Logger(True)
+thread_handler = ThreadHandler(Queue(logger), Event(), Event())
+
 
 
 def main():
