@@ -30,14 +30,19 @@ class MainMenu(threading.Thread):
         self.settings = Settings()
 
     def create_new_instruction(self, instruction="Enter instructions here"):
+        self.logger.log("create_new_instruction")
+
         def ok():
+            self.logger.log("create_new_instruction.ok()")
             self.settings.instruction = instruction_text.get("1.0", tk.END)
             new_instruction.destroy()
 
         def cancel():
+            self.logger.log("create_new_instruction.cancel()")
             new_instruction.destroy()
 
         def clear():
+            self.logger.log("create_new_instruction.clear()")
             instruction_text.delete("1.0", tk.END)
 
         new_instruction = tk.Toplevel(self.window)
@@ -64,6 +69,7 @@ class MainMenu(threading.Thread):
         instruction_text.insert("1.0", instruction)
 
     def run_official(self, trials):
+        self.logger.log(f"run_official({trials})")
         data = game.play(self.thread_handler, self.logger, self.settings, trials)
         df = data.get_data_frame()
         # throw error here
@@ -92,10 +98,11 @@ Maximum shock intensity is 2.475 mA.
         )
 
     def set_subject_threshold(self):
+        self.logger.log("set_subject_threshold()")
         if not self.settings.trials:
             self.show_message("You must open an experiment first.")
             return
-        SubjectThreshold(self.window, self.thread_handler, self.settings)
+        SubjectThreshold(self.window, self.thread_handler, self.settings, self.logger)
 
     def get_trial_count(self):
         trial_count = simpledialog.askinteger("Profile Setup", "Number of Trials: ")

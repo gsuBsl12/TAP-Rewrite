@@ -2,6 +2,7 @@ import time
 import threading
 import nidaqmx
 import queue
+import sys
 
 import line_profiler
 
@@ -86,24 +87,35 @@ class DAQ(threading.Thread):
         self.thread_handler.task_queue.clear()
         self.thread_handler.halt_event.clear()
 
-    def write_zeroes(self):
+    def write_zeroes(self, depth=0):
+        if depth > 25:
+            sys.exit(1)  # Switch this exit
         self.logger.log("Writing zeroes to DAQ")
         try:
             self.logger.log("Writing DO OFF")
-            with nidaqmx.Task() as task:
+            try:
+                task = nidaqmx.Task()
                 task.do_channels.add_do_chan("Dev1/port0/line0:0")
                 task.start()
                 task.write(False)
                 task.stop()
+            except Exception as e:
+                self.logger.log("NIDAQMX DO EXCEPTION %s" % e)
+                self.write_zeroes(depth + 1)
 
             self.logger.log("Writing AO 0.0")
-            with nidaqmx.Task() as task:
+            try:
+                task = nidaqmx.Task()
                 task.ao_channels.add_ao_voltage_chan(
                     "Dev1/ao0", min_val=0.0, max_val=2.5
                 )
                 task.start()
                 task.write(0.0)
                 task.stop()
+            except Exception as e:
+                self.logger.log("NIDAQMX AO EXCEPTION %s" % e)
+                self.write_zeroes(depth + 1)
+
         except Exception as e:
             self.logger.log("EXCEPTION %s" % e)
 
@@ -132,20 +144,28 @@ class DAQ(threading.Thread):
 
                 try:
                     self.logger.log(f"Writing AO {volts}")
-                    with nidaqmx.Task() as task:
+                    try:
+                        task = nidaqmx.Task()
                         task.ao_channels.add_ao_voltage_chan(
                             "Dev1/ao0", min_val=0.0, max_val=2.5
                         )
                         task.start()
                         task.write(volts)
                         task.stop()
+                    except Exception as e:
+                        self.logger.log("NIDAQMX DO EXCEPTION %s" % e)
+                        self.write_zeroes()
 
                     self.logger.log("Writing DO ON")
-                    with nidaqmx.Task() as task:
+                    try:
+                        task = nidaqmx.Task()
                         task.do_channels.add_do_chan("Dev1/port0/line0:0")
                         task.start()
                         task.write(True)
                         task.stop()
+                    except Exception as e:
+                        self.logger.log("NIDAQMX AO EXCEPTION %s" % e)
+                        self.write_zeroes()
 
                     self.logger.log(f"Waiting {shock_task.duration}")
                     start = time.time()

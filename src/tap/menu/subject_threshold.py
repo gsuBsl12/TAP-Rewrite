@@ -1,13 +1,16 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from classes import ThreadHandler, ShockTask, Settings
+from classes import ThreadHandler, ShockTask, Settings, Logger
 
 
 class SubjectThreshold(tk.Toplevel):
-    def __init__(self, master, thread_handler: ThreadHandler, settings: Settings):
+    def __init__(
+        self, master, thread_handler: ThreadHandler, settings: Settings, logger: Logger
+    ):
         self.thread_handler = thread_handler
         self.settings = settings
+        self.logger = logger
 
         self.lower_threshold = settings.lower_threshold
         self.higher_threshold = settings.higher_threshold
@@ -110,13 +113,20 @@ class SubjectThreshold(tk.Toplevel):
         content.rowconfigure(6, weight=1)
 
     def start_low_shock(self):
+        self.logger.log("start_low_shock()")
         self.administer_shock(0.0, 1.250)
 
     def start_high_shock(self):
+        self.logger.log("start_high_shock()")
         self.administer_shock(self.lower_threshold, 2.500, False)
 
     def administer_shock(self, min: float, max: float, lower=True):
+        self.logger.log(f"administer_shock({min}, {max}, {lower})")
+
         def update():
+            self.logger.log(
+                f"administer_shock.update() -- thread_handler.task_queue.unfinished_tasks == {self.thread_handler.task_queue.unfinished_tasks}"
+            )
             if self.thread_handler.task_queue.unfinished_tasks <= 0:
                 return
             if self.thread_handler.task_queue.unfinished_tasks > len(shock_vals):
@@ -136,6 +146,7 @@ class SubjectThreshold(tk.Toplevel):
             self.window.after(500, update)
 
         def stop():
+            self.logger.log("administer_shock.stop()")
             self.thread_handler.task_queue.lock()
             self.thread_handler.halt_event.set()
             subwindow.destroy()
@@ -169,6 +180,7 @@ class SubjectThreshold(tk.Toplevel):
         update()
 
     def write_data(self):
+        self.logger.log("write_data()")
         self.settings.lower_threshold = self.lower_threshold
         self.settings.higher_threshold = self.higher_threshold
         self.settings.subject_id = self.subject_id_entry.get()

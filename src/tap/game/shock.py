@@ -70,6 +70,7 @@ class ShockMeter:
             self.logger.log("Failed to put ShockTask in task_queue. Queue locked/full.")
 
     def lose_loop(self, shock: int, feedback: int):
+        self.logger.log("lose_loop()")
         self.drawer.render_text("YOU LOST! YOU GET A SHOCK", delay=2400)
         if shock > 10:
             shock = 10
@@ -94,6 +95,7 @@ class ShockMeter:
         return True
 
     def win_loop(self):
+        self.logger.log("win_loop()")
         self.drawer.render_text("YOU WON! YOU GET TO GIVE A SHOCK")
 
         timer_start = pygame.time.get_ticks()
