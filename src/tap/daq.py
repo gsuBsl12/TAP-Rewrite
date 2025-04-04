@@ -97,7 +97,7 @@ class DAQ(threading.Thread):
                 task = nidaqmx.Task()
                 task.do_channels.add_do_chan("Dev1/port0/line0:0")
                 task.start()
-                task.write(False)
+                task.write(False, timeout=0)
                 task.stop()
             except Exception as e:
                 self.logger.log("NIDAQMX DO EXCEPTION %s" % e)
@@ -110,7 +110,7 @@ class DAQ(threading.Thread):
                     "Dev1/ao0", min_val=0.0, max_val=2.5
                 )
                 task.start()
-                task.write(0.0)
+                task.write(0.0, timeout=0)
                 task.stop()
             except Exception as e:
                 self.logger.log("NIDAQMX AO EXCEPTION %s" % e)
@@ -150,7 +150,7 @@ class DAQ(threading.Thread):
                             "Dev1/ao0", min_val=0.0, max_val=2.5
                         )
                         task.start()
-                        task.write(volts)
+                        task.write(volts, timeout=0)
                         task.stop()
                     except Exception as e:
                         self.logger.log("NIDAQMX DO EXCEPTION %s" % e)
@@ -161,7 +161,7 @@ class DAQ(threading.Thread):
                         task = nidaqmx.Task()
                         task.do_channels.add_do_chan("Dev1/port0/line0:0")
                         task.start()
-                        task.write(True)
+                        task.write(True, timeout=0)
                         task.stop()
                     except Exception as e:
                         self.logger.log("NIDAQMX AO EXCEPTION %s" % e)
