@@ -9,7 +9,6 @@ logger = Logger(True)
 thread_handler = ThreadHandler(Queue(logger), Event(), Event())
 
 
-
 def main():
     logger.log("Creating menu thread")
     tk_thread = MainMenu(thread_handler, logger)
@@ -27,6 +26,7 @@ def main():
 def exit():
     logger.log("Setting kill event")
     thread_handler.kill_event.set()
+    # thread_handler.task_queue.put(None)
 
 
 if __name__ == "__main__":
