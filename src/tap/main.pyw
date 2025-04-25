@@ -6,7 +6,7 @@ from tap.daq import DAQ
 from tap.classes import Queue, ThreadHandler, Logger
 
 logger = Logger(True)
-thread_handler = ThreadHandler(Queue(logger), Event(), Event())
+thread_handler = ThreadHandler(Queue(logger), Event(), Event(), Event())
 
 
 def main():
