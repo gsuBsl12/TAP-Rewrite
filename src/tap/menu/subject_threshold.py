@@ -166,7 +166,7 @@ class SubjectThreshold(tk.Toplevel):
 
         def stop():
             nonlocal shock_vals
-            self.logger.log("administer_shock.stop()")
+            self.logger.log("====== administer_shock.stop() ======")
             self.thread_handler.halt_event.set()
             self.thread_handler.task_done.clear()
             shock_vals.clear()
