@@ -187,7 +187,7 @@ class DAQ(threading.Thread):
                 self.thread_handler.halt_event.wait(shock_task.cooldown)
                 self.logger.log(f"Cooled down for {time.time() - start}s")
 
-                self.thread_hanlder.task_done.set()
+                self.thread_handler.task_done.set()
             except Exception as e:
                 self.logger.log("EXCEPTION %s" % e)
                 self.logger.log("Setting halt event")
