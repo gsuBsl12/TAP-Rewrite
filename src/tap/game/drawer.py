@@ -1,6 +1,6 @@
 import pygame
 import math
-
+import sys
 
 from tap.game import constants
 
@@ -50,7 +50,17 @@ class Drawer:
             text_block, text_block.get_rect(center=self.textbox.get_rect().center)
         )
         pygame.display.flip()
-        pygame.time.wait(delay)
+
+        start = pygame.time.get_ticks()
+        while True and delay > 0:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+            if pygame.time.get_ticks() - start >= delay:
+                return
+
+            pygame.display.flip()
 
     def clockwise_arc(self, point, radius, startAngle, endAngle):
         rect = pygame.Rect(0, 0, radius * 2, radius * 2)

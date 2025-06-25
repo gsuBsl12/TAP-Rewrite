@@ -15,6 +15,7 @@ class DAQ(threading.Thread):
         logger: Logger,
         device_name="Dev1",
         pin="ao0",
+        debug=False,
     ):
         super(DAQ, self).__init__(target=self.run)
         self.thread_handler = thread_handler
@@ -24,9 +25,12 @@ class DAQ(threading.Thread):
         self.pin = pin
         self.analog_output_name = device_name + "/" + pin
 
-        # Configure reusable tasks and stream writers
-        self.ao_task, self.ao_writer = self._configure_ao_task()
-        self.do_task, self.do_writer = self._configure_do_task()
+        self.debug = debug
+
+        if not self.debug:
+            # Configure reusable tasks and stream writers
+            self.ao_task, self.ao_writer = self._configure_ao_task()
+            self.do_task, self.do_writer = self._configure_do_task()
 
         self.start()
 
@@ -73,7 +77,7 @@ class DAQ(threading.Thread):
     def run(self):
         """Main thread loop for processing tasks."""
         while not self.thread_handler.kill_event.is_set():
-            self.watch_queue()
+            self.watch_queue() if self.debug else self.test_watch_queue()
 
     def test_watch_queue(self):
         while (
