@@ -6,11 +6,10 @@ from tap.daq import DAQ
 from tap.classes import Queue, ThreadHandler, Logger
 
 logger = Logger(True)
-thread_handler = ThreadHandler(Queue(logger), Event(), Event(), Event())
+thread_handler = ThreadHandler(Queue(logger), Event(), Event())
 
 
 def main():
-    logger.log("v0.1.0")
     logger.log("Creating menu thread")
     tk_thread = MainMenu(thread_handler, logger)
 

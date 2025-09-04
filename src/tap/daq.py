@@ -15,7 +15,6 @@ class DAQ(threading.Thread):
         logger: Logger,
         device_name="Dev1",
         pin="ao0",
-        debug=False,
     ):
         super(DAQ, self).__init__(target=self.run)
         self.thread_handler = thread_handler
@@ -25,12 +24,9 @@ class DAQ(threading.Thread):
         self.pin = pin
         self.analog_output_name = device_name + "/" + pin
 
-        self.debug = debug
-
-        if not self.debug:
-            # Configure reusable tasks and stream writers
-            self.ao_task, self.ao_writer = self._configure_ao_task()
-            self.do_task, self.do_writer = self._configure_do_task()
+        # Configure reusable tasks and stream writers
+        self.ao_task, self.ao_writer = self._configure_ao_task()
+        self.do_task, self.do_writer = self._configure_do_task()
 
         self.start()
 
@@ -49,6 +45,11 @@ class DAQ(threading.Thread):
         task.do_channels.add_do_chan(f"{self.device_name}/port0/line0:0")
         writer = DigitalSingleChannelWriter(task.out_stream)
         return task, writer
+
+    # def cleanup_tasks(self):
+    #     """Clean up reusable tasks."""
+    #     self.ao_task.close()
+    #     self.do_task.close()
 
     def write_zeroes(self):
         """Reset both analog and digital outputs to zero or off."""
@@ -76,8 +77,11 @@ class DAQ(threading.Thread):
 
     def run(self):
         """Main thread loop for processing tasks."""
+        # try:
         while not self.thread_handler.kill_event.is_set():
-            self.watch_queue() if self.debug else self.test_watch_queue()
+            self.watch_queue()
+        # finally:
+        #     self.cleanup_tasks()
 
     def test_watch_queue(self):
         while (
@@ -85,16 +89,8 @@ class DAQ(threading.Thread):
             and not self.thread_handler.kill_event.is_set()
         ):
             try:
-                shock_task: ShockTask = self.thread_handler.task_queue.get(timeout=1.0)
+                shock_task: ShockTask = self.thread_handler.task_queue.get()
             except queue.Empty:
-                continue
-
-            if self.thread_handler.kill_event.is_set():
-                self.logger.log("Kill event is set. Exiting watch_queue loop.")
-                break
-            if self.thread_handler.halt_event.is_set():
-                self.logger.log("Halt event is set. Skipping current task.")
-                self.thread_handler.task_queue.task_done()
                 continue
             if self.thread_handler.task_queue.single_lock:
                 self.logger.log("Queue is locked")
@@ -104,11 +100,9 @@ class DAQ(threading.Thread):
             self.logger.log(f"Current task: {str(shock_task)}")
             self.logger.log_queue(self.thread_handler.task_queue)
             volts = self.current_to_volts(shock_task.shock)
-
+            self.logger.log(f"Writing AO {volts}")
+            self.logger.log("Writing DO ON")
             try:
-                self.logger.log(f"Writing AO {volts}")
-                self.logger.log("Writing DO ON")
-
                 self.logger.log(f"Waiting {shock_task.duration}")
                 start = time.time()
                 self.thread_handler.halt_event.wait(shock_task.duration)
@@ -121,8 +115,6 @@ class DAQ(threading.Thread):
                 start = time.time()
                 self.thread_handler.halt_event.wait(shock_task.cooldown)
                 self.logger.log(f"Cooled down for {time.time() - start}s")
-
-                self.thread_handler.task_done.set()
             except Exception as e:
                 self.logger.log("EXCEPTION %s" % e)
                 self.logger.log("Setting halt event")
@@ -191,7 +183,6 @@ class DAQ(threading.Thread):
                 self.thread_handler.halt_event.wait(shock_task.cooldown)
                 self.logger.log(f"Cooled down for {time.time() - start}s")
 
-                self.thread_handler.task_done.set()
             except Exception as e:
                 self.logger.log("EXCEPTION %s" % e)
                 self.logger.log("Setting halt event")

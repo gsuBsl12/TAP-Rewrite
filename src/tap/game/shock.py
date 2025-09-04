@@ -88,7 +88,7 @@ class ShockMeter:
         self.logger.log(f"Calling ShockMeter.generate_shock({shock}, {duration})")
 
         self.generate_shock(shock, duration)
-        # TODO : add wait on shock return
+
         self.drawer.render_text("", delay=int(duration * 1000))
         self.drawer.reset_meter(key)
         self.drawer.render_text("", delay=4000)

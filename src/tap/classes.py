@@ -123,7 +123,6 @@ class Settings:
     intensities: List[int] = field(default_factory=list)
     trials: List[Trial] = field(default_factory=list)
 
-
 class Logger:
     def __init__(self, debug_on: bool):
         self.debug_on = debug_on
@@ -217,27 +216,7 @@ class Queue(queue.Queue):
             self.not_full.notify_all()
 
 
-# class TaskLock(queue.Lock):
-#     def __init__(self):
-#         self._task = None
-#         super(TaskLock, self).__init__()
-
-#     def get_task(self) -> ShockTask:
-#         task = self._task
-#         self._task = None
-
-#         return task
-
-#     def set_task(self, task: ShockTask) -> bool:
-#         if self._task is not None:
-#             return False
-#         self._task = task
-
-#         return True
-
-
 class ThreadHandler(typing.NamedTuple):
     task_queue: Queue
     halt_event: Event
     kill_event: Event
-    task_done: Event
